@@ -19,8 +19,6 @@
 using namespace std;
 
 /**
-	TODO - implement this function 
-    
     Initializes a grid of beliefs to a uniform distribution. 
 
     @param grid - a two dimensional grid map (vector of vectors 
@@ -40,16 +38,22 @@ using namespace std;
            0.25 0.25
 */
 vector< vector <float> > initialize_beliefs(vector< vector <char> > grid) {
-	vector< vector <float> > newGrid;
+	int height = grid.size();
+	int width = grid[0].size();
+	float area = height * width;
+	float belief_per_cell = 1.0 / area;
+	vector< vector <float> > beliefs(height, vector<float>(width, 0));
 
-	// your code here
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			beliefs[i][j] = belief_per_cell;
+		}
+	}
 	
-	return newGrid;
+	return beliefs;
 }
 
 /**
-  TODO - implement this function 
-    
     Implements robot motion by updating beliefs based on the 
     intended dx and dy of the robot. 
 
@@ -88,18 +92,25 @@ vector< vector <float> > move(int dy, int dx,
   vector < vector <float> > beliefs,
   float blurring) 
 {
+	int height = beliefs.size();
+	int width = beliefs[0].size();
+  	vector < vector <float> > newGrid(height, vector<float>(width, 0.0));
 
-  vector < vector <float> > newGrid;
+	int new_i, new_j;
 
-  // your code here
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			new_i = (i + dy) % width;
+			new_j = (j + dx) % height;
+			newGrid[new_i][new_j] = beliefs[i][j];
+		}
+	}
 
   return blur(newGrid, blurring);
 }
 
 
 /**
-	TODO - implement this function 
-    
     Implements robot sensing by updating beliefs based on the 
     color of a sensor measurement 
 
@@ -140,9 +151,24 @@ vector< vector <float> > sense(char color,
 	float p_hit,
 	float p_miss) 
 {
-	vector< vector <float> > newGrid;
+	float prior;
+	vector<vector<float>> newBeliefs;
 
-	// your code here
+	for (int y = 0; y < grid.size(); ++y) {
+		vector<float> row;
+		for (int x = 0; x < grid[0].size(); ++x) {
 
-	return normalize(newGrid);
+			prior = beliefs[y][x];
+			if (grid[y][x] == color) {
+				row.push_back(prior * p_hit);
+			}
+			else
+			{
+				row.push_back(prior * p_miss);
+			}
+		}
+		newBeliefs.push_back(row);
+	}
+
+	return normalize(newBeliefs);
 }

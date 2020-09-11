@@ -21,8 +21,6 @@
 using namespace std;
 
 /**
-	TODO - implement this function
-
     Normalizes a grid of numbers. 
 
     @param grid - a two dimensional grid (vector of vectors of floats)
@@ -36,14 +34,26 @@ vector< vector<float> > normalize(vector< vector <float> > grid) {
 	
 	vector< vector<float> > newGrid;
 
-	// todo - your code here
+	float normalizer = 0.0;
+
+	// To find the sum of unnormalized probabilities
+	for (int i = 0; i < grid.size(); ++i)
+		for (int j = 0; j < grid[0].size(); ++j)
+			normalizer += grid[i][j];
+	
+	// To create a newGrid with normalized probabilities
+	for (int i = 0; i < grid.size(); ++i) {
+		vector<float> row;
+		for (int j = 0; j < grid[0].size(); ++j) {
+			row.push_back(grid[i][j] / normalizer);
+		}
+		newGrid.push_back(row);
+	}
 
 	return newGrid;
 }
 
 /**
-	TODO - implement this function.
-
     Blurs (and normalizes) a grid of probabilities by spreading 
     probability from each cell over a 3x3 "window" of cells. This 
     function assumes a cyclic world where probability "spills 
@@ -75,10 +85,43 @@ vector< vector<float> > normalize(vector< vector <float> > grid) {
     	   has been blurred.
 */
 vector < vector <float> > blur(vector < vector < float> > grid, float blurring) {
-
-	vector < vector <float> > newGrid;
 	
-	// your code here
+	if (blurring == 0.0)
+		return grid;
+
+	vector < vector <float> > newGrid(grid.size(), vector<float>(grid[0].size(),0));
+	
+	// Create Blur matrix
+	float center_prob = 1.0-blurring;
+    float corner_prob = blurring / 12.0;
+    float adjacent_prob = blurring / 6.0;
+
+	vector<vector<float>> window = {
+        {corner_prob,  adjacent_prob,  corner_prob},
+        {adjacent_prob, center_prob,  adjacent_prob},
+        {corner_prob,  adjacent_prob,  corner_prob}
+    };
+
+	float grid_val;
+	int new_i, new_j;
+	float mult;
+
+	// Apply Blurring
+	int height = grid.size();
+	int width = grid[0].size();
+	for (int i = 0; i < height; ++i) {
+		for (int j = 0; j < width; ++j) {
+			grid_val = grid[i][j];
+			for (int x = -1; x < 2; ++x) {
+				for (int y = -1; y < 2; ++y) {
+					mult = window[x + 1][y + 1];
+					new_i = (i + x + height) % height;
+					new_j = (j + y + width) % width;
+					newGrid[new_i][new_j] += mult * grid_val;
+				}
+			}
+		}
+	}
 
 	return normalize(newGrid);
 }
